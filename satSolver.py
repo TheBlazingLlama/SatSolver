@@ -20,7 +20,7 @@ def is_preamble(line):
     return 0
 
 # Generate the cube list
-def generate_minterm_list():
+def generate_cnf():
     num_vars = 0
     num_minterms = 0
     line = get_new_line_parsed()
@@ -28,15 +28,15 @@ def generate_minterm_list():
         line = get_new_line_parsed()
 
     if is_preamble(line):
-        minterm_list = []
+        cnf = []
         num_vars = int(line[2])
         num_minterms = int(line[3])
         for i in range(num_minterms):
             eqn_line = get_new_line_parsed()
             cube = generate_cube(eqn_line, num_vars)
-            minterm_list.append(cube)
+            cnf.append(cube)
 
-    return num_minterms, num_vars, minterm_list
+    return num_minterms, num_vars, cnf
 
 # Generate a cube based off a given parsed line.
 def generate_cube(line, num_var):
@@ -88,49 +88,56 @@ def bcp(cnf, unit):
             modified.append(clause)
     return modified
 
+# Check if all clauses evaluate to 1 (if set of clauses is empty)
 def clauses_all_one(set_of_clauses):
-    num_minterms = len(set_of_clauses)
-    num_vars = len(set_of_clauses[0])
 
-    for i in range(num_minterms):
-        valid = False
-        for j in range(num_vars):
-            if set_of_clauses[i][j] == 1:
-                valid = True
+    if len(set_of_clauses) == 0:
+        return True
+    else:
+        return False
 
-        if not valid:
-            return False
+# Check if any clause evaluates to 0
+def clauses_unsat(set_of_clauses):
 
-    return True
+    for clause in set_of_clauses:
+        unsat = True
+        for value in clause:
+            if value == 1:
+                unsat = False
 
+        if unsat:
+            return True
 
-def dpll(minterm_list, set_of_clauses):
+    return False
+
+def dpll(cnf, set_of_clauses):
     # Do BCP
     # FIXME: implement BCP
+    pass
 
     # If the clauses all simplify to 1
     if clauses_all_one(set_of_clauses):
         # Return SAT
         return True
-    else:
+    # If set contains a clause that evalulates to 0
+    if clauses_unsat(set_of_clauses):
         # Return UNSAT
         return False
-    
 
-    # Must Rcurse
+    # Must Recurse
     # FIXME: Heuristically choose an unassigned variable x and heuristically choose a value v
     pass
 
 
 if __name__ == "__main__":
-    num_minterms, num_vars, minterm_list = generate_minterm_list()
+    num_minterms, num_vars, cnf = generate_cnf()
     set_of_clauses = create_clause_set(num_minterms,num_vars)
 
-    print(minterm_list)
+    print(cnf)
     print(set_of_clauses)
 
     # perform calculation
-    if dpll(minterm_list, set_of_clauses):
+    if dpll(cnf, set_of_clauses):
         print("SAT")
     else:
         print("UNSAT")
