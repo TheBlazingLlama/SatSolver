@@ -1,4 +1,5 @@
 import string
+from collections import defaultdict
 
 # Return the input line except delimited by spaces
 def get_new_line_parsed():
@@ -55,3 +56,28 @@ def generate_cube(line, num_var):
 if __name__ == "__main__":
     cube_list = generate_cube_list()
     print(cube_list)
+
+    # returns varible to split on. When calling backtrack method call as such - backtrack(cnf, jersolow_wang(cnf))
+    #if no solution from that then try - backtrack(cnf, -jersolow_wang(cnf)) to negate 
+    # approx 50% speed increase from standard jersolow wang
+def jersolow_wang_2_sided_method(cnf):
+  literal_weight = defaultdict(int)
+  for clause in cnf:
+    for literal in clause:
+      literal_weight[abs(literal)] += 2 ** -len(clause)
+  return max(literal_weight, key=literal_weight.get)
+
+#kinda standard among most dpll implementations, input is cnf and the splitting variable, output is new cnf
+def bcp(cnf, unit):
+    modified = []
+    for clause in cnf:
+        if unit in clause:
+            continue
+        if -unit in clause:
+            new_clause = [x for x in clause if x != -unit]
+            if not new_clause:
+                return -1
+            modified.append(new_clause)
+        else:
+            modified.append(clause)
+    return modified
