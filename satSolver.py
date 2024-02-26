@@ -20,7 +20,7 @@ def is_preamble(line):
     return 0
 
 # Generate the cube list
-def generate_cube_list():
+def generate_minterm_list():
     num_vars = 0
     num_minterms = 0
     line = get_new_line_parsed()
@@ -28,15 +28,15 @@ def generate_cube_list():
         line = get_new_line_parsed()
 
     if is_preamble(line):
-        cube_list = []
+        minterm_list = []
         num_vars = int(line[2])
         num_minterms = int(line[3])
         for i in range(num_minterms):
             eqn_line = get_new_line_parsed()
             cube = generate_cube(eqn_line, num_vars)
-            cube_list.append(cube)
+            minterm_list.append(cube)
 
-    return num_minterms, num_vars, cube_list
+    return num_minterms, num_vars, minterm_list
 
 # Generate a cube based off a given parsed line.
 def generate_cube(line, num_var):
@@ -88,13 +88,49 @@ def bcp(cnf, unit):
             modified.append(clause)
     return modified
 
-def dpll(cube_list):
+def clauses_all_one(set_of_clauses):
+    num_minterms = len(set_of_clauses)
+    num_vars = len(set_of_clauses[0])
+
+    for i in range(num_minterms):
+        valid = False
+        for j in range(num_vars):
+            if set_of_clauses[i][j] == 1:
+                valid = True
+
+        if not valid:
+            return False
+
+    return True
+
+
+def dpll(minterm_list, set_of_clauses):
+    # Do BCP
+    # FIXME: implement BCP
+
+    # If the clauses all simplify to 1
+    if clauses_all_one(set_of_clauses):
+        # Return SAT
+        return True
+    else:
+        # Return UNSAT
+        return False
+    
+
+    # Must Rcurse
+    # FIXME: Heuristically choose an unassigned variable x and heuristically choose a value v
     pass
 
 
 if __name__ == "__main__":
-    num_minterms, num_vars, cube_list = generate_cube_list()
+    num_minterms, num_vars, minterm_list = generate_minterm_list()
     set_of_clauses = create_clause_set(num_minterms,num_vars)
-    
-    print(cube_list)
+
+    print(minterm_list)
     print(set_of_clauses)
+
+    # perform calculation
+    if dpll(minterm_list, set_of_clauses):
+        print("SAT")
+    else:
+        print("UNSAT")
