@@ -36,7 +36,7 @@ def generate_cube_list():
             cube = generate_cube(eqn_line, num_vars)
             cube_list.append(cube)
 
-    return cube_list
+    return num_minterms, num_vars, cube_list
 
 # Generate a cube based off a given parsed line.
 def generate_cube(line, num_var):
@@ -53,13 +53,19 @@ def generate_cube(line, num_var):
 
     return cube
 
-if __name__ == "__main__":
-    cube_list = generate_cube_list()
-    print(cube_list)
+def create_clause_set(num_minterms, num_vars):
+    set_of_clauses = []
 
-    # returns varible to split on. When calling backtrack method call as such - backtrack(cnf, jersolow_wang(cnf))
-    #if no solution from that then try - backtrack(cnf, -jersolow_wang(cnf)) to negate 
-    # approx 50% speed increase from standard jersolow wang
+    for i in range(num_minterms):
+        set_of_clauses.append([None])
+        for j in range(num_vars-1):
+            set_of_clauses[i].append(None)
+
+    return set_of_clauses
+
+# Returns varible to split on. When calling backtrack method call as such - backtrack(cnf, jersolow_wang(cnf))
+# If no solution from that then try - backtrack(cnf, -jersolow_wang(cnf)) to negate 
+# Approx 50% speed increase from standard jersolow wang
 def jersolow_wang_2_sided_method(cnf):
   literal_weight = defaultdict(int)
   for clause in cnf:
@@ -67,7 +73,7 @@ def jersolow_wang_2_sided_method(cnf):
       literal_weight[abs(literal)] += 2 ** -len(clause)
   return max(literal_weight, key=literal_weight.get)
 
-#kinda standard among most dpll implementations, input is cnf and the splitting variable, output is new cnf
+# Somewhat standard among most DPLL implementations, input is cnf and the splitting variable, output is new cnf
 def bcp(cnf, unit):
     modified = []
     for clause in cnf:
@@ -81,3 +87,14 @@ def bcp(cnf, unit):
         else:
             modified.append(clause)
     return modified
+
+def dpll(cube_list):
+    pass
+
+
+if __name__ == "__main__":
+    num_minterms, num_vars, cube_list = generate_cube_list()
+    set_of_clauses = create_clause_set(num_minterms,num_vars)
+    
+    print(cube_list)
+    print(set_of_clauses)
