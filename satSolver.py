@@ -1,5 +1,6 @@
 import string
 from collections import defaultdict
+import multiprocessing
 
 # Return the input line except delimited by spaces
 def get_new_line_parsed():
@@ -87,6 +88,21 @@ def bcp(cnf, unit):
         else:
             modified.append(clause)
     return modified
+    
+# Perform unit propagation. Standard across most DPLL implementations seen.
+def unit_propagation(cnf):
+    assignment = []
+    unit_clauses = [clause for clause in cnf if len(clause) == 1]
+    while unit_clauses:
+        unit = unit_clauses[0]
+        cnf = bcp(clause, unit[0])
+        assignment += [unit[0]]
+        if cnf == -1:
+            return -1, []
+        if not cnf:
+            return cnf, assignment
+        unit_clauses = [clause for clause in cnf if len(clause) == 1]
+    return cnf, assignment
 
 # Check if all clauses evaluate to 1 (if set of clauses is empty)
 def clauses_all_one(set_of_clauses):
@@ -111,9 +127,10 @@ def clauses_unsat(set_of_clauses):
     return False
 
 def dpll(cnf, set_of_clauses):
-    # Do BCP
-    # FIXME: implement BCP
-    pass
+    
+    # Call Unit Proagation to perform BCP.
+    cnf, unit_assignment = unit_propagation(cnf)
+    set_of_clauses = set_of_clauses + unit_assignment
 
     # If the clauses all simplify to 1
     if clauses_all_one(set_of_clauses):
@@ -123,10 +140,17 @@ def dpll(cnf, set_of_clauses):
     if clauses_unsat(set_of_clauses):
         # Return UNSAT
         return False
-
-    # Must Recurse
-    # FIXME: Heuristically choose an unassigned variable x and heuristically choose a value v
-    pass
+    
+    # Recursively call dpll to test different variables. Acts as the recursive part of the DPLL algorithm.
+    
+    variable = jeroslow_wang_2_sided_method(cnf)
+    
+    #pool.multiprocessing.Pool()
+    #pool.multiprocessing.Pool(processes=2)
+    
+    solution = dpll(bcp(cnf, variable), set_of_clauses + [variable])
+    if not solution:
+        solution = dpll(bcp(cnf, -variable), set_of_clauses + [-variable])
 
 
 if __name__ == "__main__":
