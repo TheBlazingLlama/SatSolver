@@ -204,7 +204,7 @@ if __name__ == "__main__":
     num_minterms, num_vars, cnf = generate_cnf()
     set_of_clauses = create_clause_set(num_minterms,num_vars)
 
-    # print(cnf)
+    print(cnf)
     # print(set_of_clauses)
 
     # perform calculation

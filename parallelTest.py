@@ -2,10 +2,11 @@ import multiprocessing
 
 # Function to process each clause
 def process_clause(clause, unit, modified, lock):
-    if unit in clause:
+    if clause[unit-1] == 1:
         return
-    if -unit in clause:
-        new_clause = [x for x in clause if x != -unit]
+    if clause[unit-1] == 2:
+        clause[unit-1] = 0
+        new_clause = clause
         if not new_clause:
             with lock:
                 modified.append(-1)
@@ -35,7 +36,7 @@ def bcp_parallel(cnf, unit):
 
 if __name__ == '__main__':
     # Example usage:
-    cnf = [[1, 3, -4], [4], [2, -3, 1]]
-    unit = 4
+    cnf = [[1, 0, 1, 2], [0, 0, 0, 1], [1, 1, 2, 0]]
+    unit = 1
     result = bcp_parallel(cnf, unit)
     print(result)
