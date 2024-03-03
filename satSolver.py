@@ -3,14 +3,28 @@ from collections import defaultdict
 import multiprocessing
 
 # Return the input line except delimited by spaces
-def get_new_line_parsed():
-    line = input()
-    parsed_line = line.split(" ")
-    return parsed_line
+def get_lines_cleaned(file_name):
+    lines = []
+    file = open(file_name)
+    for line in file:
+        split_line = line.split(" ")
+        
+        for i in range(len(split_line)):
+            split_line[i] = split_line[i].rstrip()
+            split_line[i] = split_line[i].rstrip("%")
+
+        while "" in split_line: 
+            split_line.remove("")
+
+        if not split_line: 
+            continue
+
+        lines.append(split_line)
+    return lines
 
 # Check if the parsed line is a comment
 def is_comment(line):
-    if line[0] == "c":
+    if "c" in line:
         return 1
     return 0
 
@@ -24,18 +38,19 @@ def is_preamble(line):
 def generate_cnf():
     num_vars = 0
     num_minterms = 0
-    line = get_new_line_parsed()
-    while is_comment(line):
-        line = get_new_line_parsed()
-
-    if is_preamble(line):
-        cnf = []
-        num_vars = int(line[2])
-        num_minterms = int(line[3])
-        for i in range(num_minterms):
-            eqn_line = get_new_line_parsed()
-            cube = generate_cube(eqn_line, num_vars)
+    file_name = input("Input the file you would like to read from: ")
+    lines = get_lines_cleaned(file_name)
+    cnf = []
+    for line in lines:
+        if is_comment(line):
+            continue
+        if is_preamble(line):
+            num_vars = int(line[2])
+            num_minterms = int(line[3])
+        else:
+            cube = generate_cube(line, num_vars)
             cnf.append(cube)
+
 
     return num_minterms, num_vars, cnf
 
