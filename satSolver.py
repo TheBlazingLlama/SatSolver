@@ -95,7 +95,7 @@ def unit_propagation(cnf):
     unit_clauses = [clause for clause in cnf if len(clause) == 1]
     while unit_clauses:
         unit = unit_clauses[0]
-        cnf = bcp(clause, unit[0])
+        cnf = bcp(cnf, unit[0])
         assignment += [unit[0]]
         if cnf == -1:
             return -1, []
@@ -108,23 +108,29 @@ def unit_propagation(cnf):
 def clauses_all_one(set_of_clauses):
 
     if len(set_of_clauses) == 0:
-        return True
+        return 1
     else:
-        return False
+        return 0
+    
+def all_none(clause):
+    return all(x == clause[0] for x in clause)
 
 # Check if any clause evaluates to 0
 def clauses_unsat(set_of_clauses):
 
     for clause in set_of_clauses:
-        unsat = True
-        for value in clause:
-            if value == 1:
-                unsat = False
+        unsat = 1
+        if(all_none(clause)):
+            unsat = 0
+        else:
+            for value in clause:
+                if value == 1:
+                    unsat = 0
 
         if unsat:
-            return True
+            return 1
 
-    return False
+    return 0
 
 def dpll(cnf, set_of_clauses):
     
@@ -132,21 +138,24 @@ def dpll(cnf, set_of_clauses):
     cnf, unit_assignment = unit_propagation(cnf)
     set_of_clauses = set_of_clauses + unit_assignment
 
+    print(set_of_clauses)
+
     # If the clauses all simplify to 1
     if clauses_all_one(set_of_clauses):
         # Return SAT
-        return True
+        return 1
     # If set contains a clause that evalulates to 0
     if clauses_unsat(set_of_clauses):
         # Return UNSAT
-        return False
+        return 0
     
     # Recursively call dpll to test different variables. Acts as the recursive part of the DPLL algorithm.
     
-    variable = jeroslow_wang_2_sided_method(cnf)
+    variable = jersolow_wang_2_sided_method(cnf)
+    print(variable)
     
-    #pool.multiprocessing.Pool()
-    #pool.multiprocessing.Pool(processes=2)
+    # pool.multiprocessing.Pool()
+    # pool.multiprocessing.Pool(processes=2)
     
     solution = dpll(bcp(cnf, variable), set_of_clauses + [variable])
     if not solution:
@@ -157,8 +166,8 @@ if __name__ == "__main__":
     num_minterms, num_vars, cnf = generate_cnf()
     set_of_clauses = create_clause_set(num_minterms,num_vars)
 
-    print(cnf)
-    print(set_of_clauses)
+    # print(cnf)
+    # print(set_of_clauses)
 
     # perform calculation
     if dpll(cnf, set_of_clauses):
