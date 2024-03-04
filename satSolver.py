@@ -105,37 +105,49 @@ def bcp(cnf, unit):
         else:
             modified.append(clause)
     return modified
-
+    
 def if_one_literal(clause):
     count_one = 0
-    count_two = 0
+    print(clause)
     for literal in clause:
-        if literal == 1:
+        if literal != 0:
             count_one += 1
-        if literal == 2:
-            count_two += 1
-    if count_two > 0:
-        return 0
     if count_one == 1:
         return 1
     return 0
     
+def unit_index(clause):
+  index = 0;
+  for literal in clause:
+        if literal == 0:
+            index += 1 
+  return index
+
+    
 # Perform unit propagation. Standard across most DPLL implementations seen.
 def unit_propagation(cnf):
+    row = 0 #index for adding to set_of_clauses
     assignment = []
-    unit_clauses = [clause for clause in cnf if if_one_literal(clause) == 1]
-    print(unit_clauses)
+    unit_clauses = []
+    for clause in cnf #set up unit_clauses
+      if if_one_literal(clause)==1:
+        unit_clauses.append(clause)
+        row += 1
     while unit_clauses:
         unit = unit_clauses[0]
-        cnf = bcp(cnf, unit[0])
-        print(cnf)
-        assignment += [unit[0]]
-        if cnf == -1:
+        #print(unit[3])
+        unit_index = unit_index(unit)
+        cnf = bcp(cnf, unit_index) #give index to bcp to act on the unit variable.
+        assignment += [unit]
+        if clauses_unsat(cnf): #cnf == -1:
             return -1, []
-        if not cnf:
+        if clauses_all_one(cnf): #not cnf:
             return cnf, assignment
-        unit_clauses = [clause for clause in cnf if len(clause) == 1]
-    return cnf, assignment
+        for clause in cnf
+          if if_one_literal(clause)==1:
+            unit_clauses.append(clause)
+            row += 1
+    return cnf, assignment, row
 
 # Check if all clauses evaluate to 1 (if set of clauses is empty)
 def clauses_all_one(set_of_clauses):
@@ -176,24 +188,21 @@ def clauses_unsat(set_of_clauses):
 def dpll(cnf, set_of_clauses):
     
     # Call Unit Proagation to perform BCP.
-    cnf, unit_assignment = unit_propagation(cnf)
-    set_of_clauses = set_of_clauses + unit_assignment
+    cnf, unit_assignment, row = unit_propagation(cnf)
+    set_of_clauses[row] = unit_assignment
     print(set_of_clauses)
     # If the clauses all simplify to 1
-    if clauses_all_one(set_of_clauses):
+    if clauses_all_one(cnf):
         # Return SAT
-        return 1
+        return set_of_clauses
     # If set contains a clause that evalulates to 0
-    if clauses_unsat(set_of_clauses):
+    if clauses_unsat(cnf):
         # Return UNSAT
         return 0
     
     # Recursively call dpll to test different variables. Acts as the recursive part of the DPLL algorithm.
     
     variable = jersolow_wang_2_sided_method(cnf)
-    
-    # pool.multiprocessing.Pool()
-    # pool.multiprocessing.Pool(processes=2)
     
     solution = dpll(bcp(cnf, variable), set_of_clauses + [variable])
     if not solution:
