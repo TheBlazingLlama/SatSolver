@@ -1,34 +1,28 @@
+import multiprocessing
 from collections import defaultdict
-from multiprocessing import Pool, cpu_count
 
-def process_clause(clause):
-    local_weight = defaultdict(int)
-    for index, literal in enumerate(clause, start=1):
-        if literal == 1:
-            local_weight[index] += 2 ** -len(clause)
-        elif literal == 2:
-            local_weight[-index] += 2 ** -len(clause)
-        # For 0, indicating the variable doesn't appear in the clause
-        elif literal == 0:
-            pass
-        # Add more conditions if needed for other values
-    return local_weight
+def calculate_literal_weight(clause):
+    literal_weight = defaultdict(int)
+    for index, value in enumerate(clause):
+        if value != 0:  # Ignore variables that don't appear in the clause
+            weight = 2 ** -sum(1 for v in clause if v != 0)  # Weight is 2^-size of clause
+            literal_weight[index + 1 if value == 1 else -index - 1] += weight
+    return literal_weight
 
-def merge_dicts(dict_list):
-    merged_dict = defaultdict(int)
-    for d in dict_list:
-        for key, value in d.items():
-            merged_dict[key] += value
-    return merged_dict
+def jersolow_wang_2_sided_method(cnf_index):
+    pool = multiprocessing.Pool()
+    results = pool.map(calculate_literal_weight, cnf_index)
+    pool.close()
+    pool.join()
+    
+    literal_weight = defaultdict(int)
+    for result in results:
+        for literal, weight in result.items():
+            literal_weight[literal] += weight
+                
+    return max(literal_weight, key=literal_weight.get)
 
-def jersolow_wang_p(cnf):
-    with Pool(cpu_count()) as pool:
-        results = pool.map(process_clause, cnf)
-    merged_result = merge_dicts(results)
-    return max(merged_result, key=merged_result.get) 
-
-if __name__ == '__main__':
-    # Example usage:
-    cnf1 = [[2, 1, 1, 2], [2, 0, 1, 1], [1, 1, 0, 1], [0, 0, 0, 1], [0, 2, 0, 1]]
-    res = jersolow_wang_p(cnf1)
-    print("Literal with maximum weight parallel:", res)
+if __name__ == "__main__":
+    cnf_index = [[1,0,1,2],[0,0,0,1],[0,1,2,0]]
+    result = jersolow_wang_2_sided_method(cnf_index)
+    print("Variable selected:", result)
