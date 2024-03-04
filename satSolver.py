@@ -117,11 +117,11 @@ def if_one_literal(clause):
     return 0
     
 def unit_index(clause):
-  index = 0;
-  for literal in clause:
+    index = 0
+    for literal in clause:
         if literal == 0:
             index += 1 
-  return index
+    return index
 
     
 # Perform unit propagation. Standard across most DPLL implementations seen.
@@ -129,24 +129,24 @@ def unit_propagation(cnf):
     row = 0 #index for adding to set_of_clauses
     assignment = []
     unit_clauses = []
-    for clause in cnf #set up unit_clauses
-      if if_one_literal(clause)==1:
-        unit_clauses.append(clause)
-        row += 1
+    for clause in cnf: #set up unit_clauses
+        if if_one_literal(clause)==1:
+            unit_clauses.append(clause)
+            row += 1
     while unit_clauses:
         unit = unit_clauses[0]
         #print(unit[3])
-        unit_index = unit_index(unit)
-        cnf = bcp(cnf, unit_index) #give index to bcp to act on the unit variable.
+        unit_index_var = unit_index(unit)
+        cnf = bcp(cnf, unit_index_var) #give index to bcp to act on the unit variable.
         assignment += [unit]
         if clauses_unsat(cnf): #cnf == -1:
             return -1, []
         if clauses_all_one(cnf): #not cnf:
             return cnf, assignment
-        for clause in cnf
-          if if_one_literal(clause)==1:
-            unit_clauses.append(clause)
-            row += 1
+        for clause in cnf:
+            if if_one_literal(clause)==1:
+                unit_clauses.append(clause)
+                row += 1
     return cnf, assignment, row
 
 # Check if all clauses evaluate to 1 (if set of clauses is empty)
