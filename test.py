@@ -69,19 +69,16 @@ def create_clause_set(num_minterms, num_vars):
 # Returns varible to split on. When calling backtrack method call as such - backtrack(cnf, jersolow_wang(cnf))
 # If no solution from that then try - backtrack(cnf, -jersolow_wang(cnf)) to negate 
 # Approx 50% speed increase from standard jersolow wang
-def jersolow_wang_2_sided_method(cnf):
+def jersolow_wang_2_sided_method(cnf_index):
     literal_weight = defaultdict(int)
-    for clause in cnf:
-        for index, literal in enumerate(clause, start=1):
-            if literal == 1:
-                literal_weight[index] += 2 ** -len(clause)
-            elif literal == 2:
-                literal_weight[-index] += 2 ** -len(clause)
-            # For 0, indicating the variable doesn't appear in the clause
-            elif literal == 0:
-                pass
-            # Add more conditions if needed for other values
-    return max(literal_weight, key=literal_weight.get)+1
+    
+    for clause in cnf_index:
+        for index, value in enumerate(clause):
+            if value != 0:  # Ignore variables that don't appear in the clause
+                weight = 2 ** -sum(1 for v in clause if v != 0)  # Weight is 2^-size of clause
+                literal_weight[index + 1 if value == 1 else -index - 1] += weight
+                
+    return max(literal_weight, key=literal_weight.get)
 
 # Somewhat standard among most DPLL implementations, input is cnf and the splitting variable, output is new cnf
 def bcp(cnf, unit, flag):
