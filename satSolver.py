@@ -16,6 +16,9 @@ def get_lines_cleaned(file_name):
         while "" in split_line: 
             split_line.remove("")
 
+        while "0" in split_line: 
+            split_line.remove("0")
+
         if not split_line: 
             continue
 
@@ -40,6 +43,7 @@ def generate_cnf():
     num_minterms = 0
     file_name = input("Input the file you would like to read from: ")
     lines = get_lines_cleaned(file_name)
+    print(lines)
     cnf = []
     for line in lines:
         if is_comment(line):
@@ -51,6 +55,27 @@ def generate_cnf():
             cube = generate_cube(line, num_vars)
             cnf.append(cube)
 
+
+    return num_minterms, num_vars, cnf
+
+# Generate the cube list
+def generate_cnf_value_based():
+    num_vars = 0
+    num_minterms = 0
+    file_name = input("Input the file you would like to read from: ")
+    lines = get_lines_cleaned(file_name)
+    print(lines)
+    cnf = []
+    for line in lines:
+        if is_comment(line):
+            continue
+        if is_preamble(line):
+            num_vars = int(line[2])
+            num_minterms = int(line[3])
+        else:
+            #cube = generate_cube(line, num_vars)
+            line = list(map(int, line))
+            cnf.append(line)
 
     return num_minterms, num_vars, cnf
 
@@ -107,7 +132,7 @@ def bcp(cnf, unit):
     #  cnf_p = deepcopy(cnf)
     #  for clause in cnf_p:
     #    clause[unit] = 1
-      # Add functionality here
+    # Add functionality here
     for clause in cnf:
         if clause[unit] == 1:
             continue
@@ -140,10 +165,10 @@ def if_one_literal(clause):
     return 0
     
 def unit_index(clause):
-  index = 0;
+  index = 0
   for literal in clause:
-        if literal == 0:
-            index += 1 
+      if literal == 0:
+          index += 1 
   return index
 
     
@@ -159,15 +184,15 @@ def unit_propagation(cnf):
         row += 1
         
     while unit_clauses:
-        print(f'unit_clause: {unit_clauses}')
+        #print(f'unit_clause: {unit_clauses}')
         unit = unit_clauses[0]
-        print(f'unit: {unit}')
+        #print(f'unit: {unit}')
         index = unit_index(unit)
-        print(f'index: {index}')
+        #print(f'index: {index}')
         cnf = bcp(cnf, index)
         assignment += [unit]
-        print(f'cnf: {cnf}')
-        print(f'row: {row}')
+        #print(f'cnf: {cnf}')
+        #print(f'row: {row}')
         if clauses_unsat(cnf): #cnf == -1:
             return -1, []
         if clauses_all_one(cnf):#not cnf:
@@ -203,7 +228,7 @@ def clauses_unsat(set_of_clauses):
 
     for clause in set_of_clauses:
         unsat = 1
-        if(all_dc(clause)):
+        if all_dc(clause):
             unsat = 0
         else:
             for value in clause:
@@ -226,11 +251,11 @@ def dpll(cnf, set_of_clauses):
     # If the clauses all simplify to 1
     if clauses_all_one(cnf):
         # Return SAT
-        return 1
+        return set_of_clauses
     # If set contains a clause that evalulates to 0
     if clauses_unsat(cnf):
         # Return UNSAT
-        return set_of_clauses
+        return 0
     
     # Recursively call dpll to test different variables. Acts as the recursive part of the DPLL algorithm.
     
@@ -242,13 +267,14 @@ def dpll(cnf, set_of_clauses):
     set_of_clauses[variable] = 1
     solution = dpll(bcp(cnf, variable), set_of_clauses)
     if not solution:
-        set_of_clause[variable] = 2
+        set_of_clauses[variable] = 2
         solution = dpll(bcp(cnf, variable), set_of_clauses)
     return solution
 
 
 if __name__ == "__main__":
-    num_minterms, num_vars, cnf = generate_cnf()
+    # num_minterms, num_vars, cnf = generate_cnf()
+    num_minterms, num_vars, cnf = generate_cnf_value_based()
     set_of_clauses = create_clause_set(num_minterms,num_vars)
 
     print(cnf)
