@@ -161,7 +161,7 @@ def bcp_worker(chunk_cnf, unit, flag, result_queue):
             new_cnf.append(clause)
     result_queue.put(new_cnf)
 # use 1 for flag if positive and 2 if complemented
-def bcp(cnf, unit, flag):
+def bcp_parallel(cnf, unit, flag):
     processes = []
     num_processes = multiprocessing.cpu_count()
     chunk_size = len(cnf) // num_processes
@@ -208,7 +208,7 @@ def unit_index(clause):
 
     
 # Perform unit propagation. Standard across most DPLL implementations seen.
-def unit_propagation(cnf):
+def unit_propagation_parallel(cnf):
     row = 0
     assignment = []
     unit_clauses = []
@@ -224,7 +224,7 @@ def unit_propagation(cnf):
     while unit_clauses:
         literal = unit_clauses[0]
         index = literal[0]
-        cnf = bcp(cnf, index, 1)
+        cnf = bcp_parallel(cnf, index, 1)
         assignment += [literal]
         if clauses_unsat(cnf): #cnf == -1:
             return -1, []
@@ -258,10 +258,24 @@ def clauses_unsat(set_of_clauses):
         return 1
     return 0
 
-def dpll(cnf, set_of_clauses):
+def print_nested_clauses(set_of_clauses):
+    for item in set_of_clauses:
+        if isinstance(item, list):
+            print_nested_clauses(item)
+        else:
+            print(item,end=' ')
+
+def print_info(cnf, unit_assignment, set_of_clauses):
+    print(f'CNF: {cnf}')
+    print(f'Unit Assignment: {unit_assignment}')
+    print(f'Set of Clauses: ')
+    print_nested_clauses(set_of_clauses)
+    print()
+
+def dpll_parallel(cnf, set_of_clauses):
     
     # Call Unit Proagation to perform BCP.
-    cnf, unit_assignment= unit_propagation(cnf)
+    cnf, unit_assignment= unit_propagation_parallel(cnf)
     set_of_clauses.append(unit_assignment)
 
     #print(f'cnf: {cnf}')
@@ -281,12 +295,9 @@ def dpll(cnf, set_of_clauses):
     
     variable = jersolow_wang_2_sided_method(cnf)
     
-    # pool.multiprocessing.Pool()
-    # pool.multiprocessing.Pool(processes=2)
-    # Doesn't work
-    solution = dpll(bcp(cnf, variable, 1), set_of_clauses + [variable])
+    solution = dpll_parallel(bcp_parallel(cnf, variable, 1), set_of_clauses + [variable])
     if not solution:
-        solution = dpll(bcp(cnf, variable, 2), set_of_clauses + [-variable])
+        solution = dpll_parallel(bcp_parallel(cnf, variable, 2), set_of_clauses + [-variable])
     return solution
 
 
@@ -300,7 +311,7 @@ if __name__ == "__main__":
     # print(set_of_clauses)
 
     # perform calculation
-    result = dpll(cnf, set_of_clauses)
+    result = dpll_parallel(cnf, set_of_clauses)
     if result:
         print("SATISFIABLE")
         print(result)

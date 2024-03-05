@@ -1,6 +1,8 @@
 import string
 from collections import defaultdict
 import multiprocessing
+import time
+
 
 # Return the input line except delimited by spaces
 def get_lines_cleaned(file_name):
@@ -263,9 +265,9 @@ def dpll(cnf, set_of_clauses):
     cnf, unit_assignment= unit_propagation(cnf)
     set_of_clauses.append(unit_assignment)
 
-    print(f'cnf: {cnf}')
-    print(f'unit_assignment: {unit_assignment}')
-    print(f'soc: {set_of_clauses}')
+    #print(f'cnf: {cnf}')
+    #print(f'unit_assignment: {unit_assignment}')
+    #print(f'soc: {set_of_clauses}')
     # If the clauses all simplify to 1
     if clauses_all_one(cnf):
         # Return SAT
@@ -297,9 +299,13 @@ if __name__ == "__main__":
     # print(set_of_clauses)
 
     # perform calculation
+    start_time = time.time()
     result = dpll(cnf, set_of_clauses)
     if result:
         print("SATISFIABLE")
         print(result)
+        print()
     else:
         print("UNSATISFIABLE")
+    elapsed_time = time.time() - start_time
+    print(f"Execution time: {elapsed_time:.6f} seconds")

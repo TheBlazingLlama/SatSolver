@@ -260,7 +260,7 @@ def dpll(cnf, set_of_clauses):
     set_of_clauses[variable-1] = 1
     solution = dpll(bcp(cnf, variable-1, 1), set_of_clauses)
     if not solution:
-        set_of_clause[variable-1] = 2
+        set_of_clauses[variable-1] = 2
         solution = dpll(bcp(cnf, variable-1, 2), set_of_clauses)
     return solution
 
