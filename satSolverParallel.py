@@ -171,7 +171,7 @@ def unit_propagation_parallel(cnf):
     
     for clause in cnf:
       if if_one_literal(clause)==1:
-          if l:
+        if l:
             print("one literal clause is " + str(clause))
         unit_clauses.append(clause)
         
