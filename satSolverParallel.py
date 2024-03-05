@@ -3,6 +3,7 @@ from collections import defaultdict
 import multiprocessing
 import time
 
+l = False;
 # Return the input line except delimited by spaces
 def get_lines_cleaned(file_name):
     lines = []
@@ -265,7 +266,7 @@ if __name__ == "__main__":
     print(cnf)
 
     # perform calculation
-    result = dpll(cnf, set_of_clauses)
+    result = dpll_parallel(cnf, set_of_clauses)
     if result:
         print("SATISFIABLE")
         print(result)
