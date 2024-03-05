@@ -1,6 +1,7 @@
 import string
 from collections import defaultdict
 import multiprocessing
+import time
 
 # Return the input line except delimited by spaces
 def get_lines_cleaned(file_name):
@@ -263,9 +264,10 @@ def dpll(cnf, set_of_clauses):
     cnf, unit_assignment= unit_propagation(cnf)
     set_of_clauses.append(unit_assignment)
 
-    print(f'cnf: {cnf}')
-    print(f'unit_assignment: {unit_assignment}')
-    print(f'soc: {set_of_clauses}')
+    #print(f'cnf: {cnf}')
+    #print(f'unit_assignment: {unit_assignment}')
+    #print(f'soc: {set_of_clauses}')
+
     # If the clauses all simplify to 1
     if clauses_all_one(cnf):
         # Return SAT
@@ -284,16 +286,17 @@ def dpll(cnf, set_of_clauses):
     # Doesn't work
     solution = dpll(bcp(cnf, variable, 1), set_of_clauses + [variable])
     if not solution:
-        solution = dpll(bcp(cnf, -variable, 2), set_of_clauses + [-variable])
+        solution = dpll(bcp(cnf, variable, 2), set_of_clauses + [-variable])
     return solution
 
 
 if __name__ == "__main__":
+    start_time = time.time()
     # num_minterms, num_vars, cnf = generate_cnf()
     num_minterms, num_vars, cnf = generate_cnf_value_based()
     set_of_clauses = create_clause_set(num_minterms,num_vars)
 
-    print(cnf)
+    #print(cnf)
     # print(set_of_clauses)
 
     # perform calculation
@@ -303,3 +306,8 @@ if __name__ == "__main__":
         print(result)
     else:
         print("UNSATISFIABLE")
+
+    end_time = time.time()
+
+    elapsed_time = end_time - start_time
+    print("Elapsed time:", elapsed_time, "seconds")
