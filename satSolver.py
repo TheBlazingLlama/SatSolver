@@ -104,37 +104,89 @@ def create_clause_set(num_minterms, num_vars):
 # Returns varible to split on. When calling backtrack method call as such - backtrack(cnf, jersolow_wang(cnf))
 # If no solution from that then try - backtrack(cnf, -jersolow_wang(cnf)) to negate 
 # Approx 50% speed increase from standard jersolow wang
-# Returns varible to split on. When calling backtrack method call as such - backtrack(cnf, jersolow_wang(cnf))
-# If no solution from that then try - backtrack(cnf, -jersolow_wang(cnf)) to negate 
-# Approx 50% speed increase from standard jersolow wang
-def jersolow_wang_2_sided_method(cnf):
+def jersolow_wang_worker(chunk_cnf, result_queue):
     literal_weight = defaultdict(int)
-    for clause in cnf:
+    for clause in chunk_cnf:
         for literal in clause:
-            literal_weight[abs(literal)] += 2** -len(clause)
-    return max(literal_weight, key=literal_weight.get)
+            literal_weight[abs(literal)] += 2 ** -len(clause)
+    result_queue.put(literal_weight)
+
+def jersolow_wang_2_sided_method(cnf):
+    num_processes = multiprocessing.cpu_count()
+    chunk_size = len(cnf) // num_processes
+    manager = multiprocessing.Manager()
+    result_queue = manager.Queue()
+    processes = []
+
+    for i in range(num_processes):
+        start_idx = i * chunk_size
+        end_idx = start_idx + chunk_size if i < num_processes - 1 else len(cnf)
+        chunk_cnf = cnf[start_idx:end_idx]
+        p = multiprocessing.Process(target=jersolow_wang_worker, args=(chunk_cnf, result_queue))
+        processes.append(p)
+        p.start()
+
+    for p in processes:
+        p.join()
+
+    combined_literal_weight = defaultdict(int)
+    while not result_queue.empty():
+        literal_weight = result_queue.get()
+        for literal, weight in literal_weight.items():
+            combined_literal_weight[literal] += weight
+
+    return max(combined_literal_weight, key=combined_literal_weight.get)
 
 # Somewhat standard among most DPLL implementations, input is cnf and the splitting variable, output is new cnf
-def bcp(cnf, literal):
-    calculated = []
-    
-    for clause in cnf:
-        if literal in clause:
+def bcp_worker(chunk_cnf, unit, flag, result_queue):
+    new_cnf = []
+    if flag == 1:
+        unit_literal = unit
+        neg_unit_literal = -unit
+    elif flag == 2:
+        unit_literal = -unit
+        neg_unit_literal = unit
+        
+    for clause in chunk_cnf:
+        if unit_literal in clause:
             continue
-        if -literal in clause:
-            new_clause = []
-
-            for x in clause:
-                if x != -literal:
-                    new_clause.append(x)
-
+        if neg_unit_literal in clause:
+            new_clause = [literal for literal in clause if literal != neg_unit_literal]
             if not new_clause:
-                return -1
-            calculated.append(new_clause)
+                result_queue.put(-1)
+                return
+            new_cnf.append(new_clause)
         else:
-            calculated.append(clause)
-    #print(calculated)
-    return calculated
+            new_cnf.append(clause)
+    result_queue.put(new_cnf)
+# use 1 for flag if positive and 2 if complemented
+def bcp(cnf, unit, flag):
+    processes = []
+    num_processes = multiprocessing.cpu_count()
+    chunk_size = len(cnf) // num_processes
+    manager = multiprocessing.Manager()
+    result_queue = manager.Queue()
+    
+    for i in range(num_processes):
+        start_idx = i * chunk_size
+        end_idx = start_idx + chunk_size if i < num_processes - 1 else len(cnf)
+        chunk_cnf = cnf[start_idx:end_idx]
+        p = multiprocessing.Process(target=bcp_worker, args=(chunk_cnf, unit, flag, result_queue))
+        processes.append(p)
+        p.start()
+    
+    for p in processes:
+        p.join()
+    
+    new_cnf = []
+    while not result_queue.empty():
+        result = result_queue.get()
+        if result == -1:
+            return -1
+        else:
+            new_cnf.extend(result)
+    
+    return new_cnf
 
 def if_one_literal(clause):
     count_one = 0
@@ -171,8 +223,8 @@ def unit_propagation(cnf):
     while unit_clauses:
         literal = unit_clauses[0]
         index = literal[0]
-        cnf = bcp(cnf, index[0])
-        assignment += [literal[0]]
+        cnf = bcp(cnf, index, 1)
+        assignment += [literal]
         if clauses_unsat(cnf): #cnf == -1:
             return -1, []
         if clauses_all_one(cnf):#not cnf:
@@ -230,9 +282,9 @@ def dpll(cnf, set_of_clauses):
     # pool.multiprocessing.Pool()
     # pool.multiprocessing.Pool(processes=2)
     # Doesn't work
-    solution = dpll(bcp(cnf, variable), set_of_clauses + [variable])
+    solution = dpll(bcp(cnf, variable, 1), set_of_clauses + [variable])
     if not solution:
-        solution = dpll(bcp(cnf, -variable), set_of_clauses + [-variable])
+        solution = dpll(bcp(cnf, variable, 2), set_of_clauses + [variable])
     return solution
 
 
