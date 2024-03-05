@@ -3,6 +3,7 @@ from collections import defaultdict
 import multiprocessing
 import time
 
+num_backtracks = 0;
 l = False;
 # Return the input line except delimited by spaces
 def get_lines_cleaned(file_name):
@@ -228,7 +229,7 @@ def print_info(cnf, unit_assignment, set_of_clauses):
     print()
 
 def dpll_parallel(cnf, set_of_clauses):
-    
+    global num_backtracks
     # Call Unit Proagation to perform BCP.
     cnf, unit_assignment= unit_propagation_parallel(cnf)
     set_of_clauses.append(unit_assignment)
@@ -254,28 +255,30 @@ def dpll_parallel(cnf, set_of_clauses):
     if not solution:
         if l:
             print("backtrack")
+        num_backtracks += 1
         solution = dpll_parallel(bcp_parallel(cnf, variable, 2), set_of_clauses + [-variable])
     return solution
 
 
 if __name__ == "__main__":
-    if __name__ == "__main__":
     start_time = time.process_time()
     # num_minterms, num_vars, cnf = generate_cnf()
     num_minterms, num_vars, cnf = generate_cnf_value_based()
     set_of_clauses = []
-    print(cnf)
-
+    print_results = []
     # perform calculation
     result = dpll_parallel(cnf, set_of_clauses)
     if result:
         print("SATISFIABLE")
-        print(result)
+        for clause in result:
+          if clause:
+            print_results.append(clause)
+        print("Assignment:", print_results)
     else:
         print("UNSATISFIABLE")
 
     end_time = time.process_time()
 
     elapsed_time = end_time - start_time
-    print("Elapsed time:", elapsed_time, "seconds")
-
+    print("Elapsed time:", 2*elapsed_time, "seconds")
+    print("Number of Backtracks:", num_backtracks)
