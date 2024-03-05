@@ -30,7 +30,7 @@ def get_lines_cleaned(file_name):
 
 # Check if the parsed line is a comment
 def is_comment(line):
-    if "c" in line:
+    if line[0] == "c":
         return 1
     return 0
 
@@ -265,20 +265,17 @@ if __name__ == "__main__":
     # num_minterms, num_vars, cnf = generate_cnf()
     num_minterms, num_vars, cnf = generate_cnf_value_based()
     set_of_clauses = []
-    print_results = []
     # perform calculation
     result = dpll_parallel(cnf, set_of_clauses)
     if result:
         print("SATISFIABLE")
-        for clause in result:
-          if clause:
-            print_results.append(clause)
-        print("Assignment:", print_results)
+        print("Assignment:")
+        print_nested_clauses(result)
     else:
         print("UNSATISFIABLE")
 
     end_time = time.process_time()
 
     elapsed_time = end_time - start_time
-    print("Elapsed time:", 2*elapsed_time, "seconds")
+    print("\nElapsed time:", 2*elapsed_time, "seconds")
     print("Number of Backtracks:", num_backtracks)
