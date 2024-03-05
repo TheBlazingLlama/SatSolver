@@ -39,30 +39,14 @@ def is_preamble(line):
     return 0
 
 # Generate the cube list
-def generate_cnf():
-    num_vars = 0
-    num_minterms = 0
-    file_name = input("Input the file you would like to read from: ")
-    lines = get_lines_cleaned(file_name)
-    cnf = []
-    for line in lines:
-        if is_comment(line):
-            continue
-        if is_preamble(line):
-            num_vars = int(line[2])
-            num_minterms = int(line[3])
-        else:
-            cube = generate_cube(line, num_vars)
-            cnf.append(cube)
-
-
-    return num_minterms, num_vars, cnf
-
-# Generate the cube list
 def generate_cnf_value_based():
     num_vars = 0
     num_minterms = 0
     file_name = input("Input the file you would like to read from: ")
+    if(file_name[-2:] == "-l"):
+        global l
+        l = True
+        file_name = file_name[:-3]
     lines = get_lines_cleaned(file_name)
     cnf = []
     for line in lines:
@@ -77,30 +61,6 @@ def generate_cnf_value_based():
 
     return num_minterms, num_vars, cnf
 
-# Generate a cube based off a given parsed line.
-def generate_cube(line, num_var):
-    cube = [0] * num_var
-    
-    for var in line:
-        var = int(var)
-        if var == 0:
-            continue
-        elif var > 0:
-            cube[abs(var) - 1] = 1
-        else:
-            cube[abs(var) - 1] = 2
-
-    return cube
-
-def create_clause_set(num_minterms, num_vars):
-    set_of_clauses = []
-    '''
-    for i in range(num_minterms):
-        set_of_clauses.append([0])
-        for j in range(num_vars-1):
-            set_of_clauses[i].append(0)
-    '''
-    return set_of_clauses
 
 # Returns varible to split on. When calling backtrack method call as such - backtrack(cnf, jersolow_wang(cnf))
 # If no solution from that then try - backtrack(cnf, -jersolow_wang(cnf)) to negate 
@@ -199,14 +159,6 @@ def if_one_literal(clause):
         return 1
     return 0
     
-def unit_index(clause):
-  index = 0
-  for literal in clause:
-      if literal == 0:
-          index += 1 
-  return index
-
-    
 # Perform unit propagation. Standard across most DPLL implementations seen.
 def unit_propagation_parallel(cnf):
     row = 0
@@ -219,6 +171,8 @@ def unit_propagation_parallel(cnf):
     
     for clause in cnf:
       if if_one_literal(clause)==1:
+          if l:
+            print("one literal clause is " + str(clause))
         unit_clauses.append(clause)
         
     while unit_clauses:
@@ -297,6 +251,8 @@ def dpll_parallel(cnf, set_of_clauses):
     
     solution = dpll_parallel(bcp_parallel(cnf, variable, 1), set_of_clauses + [variable])
     if not solution:
+        if l:
+            print("backtrack")
         solution = dpll_parallel(bcp_parallel(cnf, variable, 2), set_of_clauses + [-variable])
     return solution
 
@@ -305,19 +261,21 @@ if __name__ == "__main__":
     start_time = time.time()
     # num_minterms, num_vars, cnf = generate_cnf()
     num_minterms, num_vars, cnf = generate_cnf_value_based()
-    set_of_clauses = create_clause_set(num_minterms,num_vars)
-
-    #print(cnf)
-    # print(set_of_clauses)
+    set_of_clauses = []
+    print(cnf)
 
     # perform calculation
-    result = dpll_parallel(cnf, set_of_clauses)
+    result = dpll(cnf, set_of_clauses)
     if result:
         print("SATISFIABLE")
         print(result)
     else:
         print("UNSATISFIABLE")
 
+    end_time = time.time()
+
+    elapsed_time = end_time - start_time
+    print("Elapsed time:", elapsed_time, "seconds")
     end_time = time.time()
 
     elapsed_time = end_time - start_time
