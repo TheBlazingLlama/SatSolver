@@ -171,8 +171,8 @@ def unit_propagation(cnf):
     while unit_clauses:
         literal = unit_clauses[0]
         index = literal[0]
-        cnf = bcp(cnf, index)
-        assignment += [literal]
+        cnf = bcp(cnf, index[0])
+        assignment += [literal[0]]
         if clauses_unsat(cnf): #cnf == -1:
             return -1, []
         if clauses_all_one(cnf):#not cnf:
@@ -232,7 +232,7 @@ def dpll(cnf, set_of_clauses):
     # Doesn't work
     solution = dpll(bcp(cnf, variable), set_of_clauses + [variable])
     if not solution:
-        solution = dpll(bcp(cnf, variable), set_of_clauses + [variable])
+        solution = dpll(bcp(cnf, -variable), set_of_clauses + [-variable])
     return solution
 
 
