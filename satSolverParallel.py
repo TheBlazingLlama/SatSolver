@@ -259,7 +259,8 @@ def dpll_parallel(cnf, set_of_clauses):
 
 
 if __name__ == "__main__":
-    start_time = time.time()
+    if __name__ == "__main__":
+    start_time = time.process_time()
     # num_minterms, num_vars, cnf = generate_cnf()
     num_minterms, num_vars, cnf = generate_cnf_value_based()
     set_of_clauses = []
@@ -273,11 +274,8 @@ if __name__ == "__main__":
     else:
         print("UNSATISFIABLE")
 
-    end_time = time.time()
+    end_time = time.process_time()
 
     elapsed_time = end_time - start_time
     print("Elapsed time:", elapsed_time, "seconds")
-    end_time = time.time()
 
-    elapsed_time = end_time - start_time
-    print("Elapsed time:", elapsed_time, "seconds")
