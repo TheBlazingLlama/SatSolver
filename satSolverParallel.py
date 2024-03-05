@@ -224,8 +224,8 @@ def unit_propagation(cnf):
     while unit_clauses:
         literal = unit_clauses[0]
         index = literal[0]
-        cnf = bcp(cnf, index[0], 1)
-        assignment += [literal[0]]
+        cnf = bcp(cnf, index, 1)
+        assignment += [literal]
         if clauses_unsat(cnf): #cnf == -1:
             return -1, []
         if clauses_all_one(cnf):#not cnf:
