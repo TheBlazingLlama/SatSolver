@@ -20,7 +20,7 @@ The code will provide the following prompt. Please input the benchmark file you 
 
 	Input the file you would like to read from: __filename__
 
-If you would like to print out illuminated information, such as backtracks and the values computed, please input the filename followed by -l
+If you would like to print out illuminating information, such as backtracks and the values computed, please input the filename followed by -l
 
 	Input the file you would like to read from: __filename__ -l
 
